@@ -16,15 +16,22 @@ subtitle:
 # - Add/remove as many `feature` blocks below as you like.
 # - For available icons, see: https://wowchemy.com/docs/page-builder/#icons
 feature:
-- icon: r-project
+- description: '9 years of experience, using for statistical analysis, data manipulation and visualization (e.g., Tidyverse)'
+  icon: r-project
   icon_pack: fab
   name: R
-- icon: python
+- description: '1 year of experience, using for data manipulation and visualization with pandas, numpy, matplotlib, seaborn, etc, and, machine learning with scikit-learn'
+  icon: python
   icon_pack: fab
   name: Python
-- icon: chart-line
+- description: '9 years of experience, using for several univariate and multivariate analyses'
+  icon: chart-line
   icon_pack: fas
   name: Statistics
+- description: '1 year of experience using PostgreSQL'
+  icon: database
+  icon_pack: fas
+  name: SQL
 
 # Uncomment to use emoji icons.
 #- icon = ":smile:"
