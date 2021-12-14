@@ -1,52 +1,32 @@
 ---
-abstract: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis posuere tellus
-  ac convallis placerat. Proin tincidunt magna sed ex sollicitudin condimentum. Sed
-  ac faucibus dolor, scelerisque sollicitudin nisi. Cras purus urna, suscipit quis
-  sapien eu, pulvinar tempor diam. Quisque risus orci, mollis id ante sit amet, gravida
-  egestas nisl. Sed ac tempus magna. Proin in dui enim. Donec condimentum, sem id
-  dapibus fringilla, tellus enim condimentum arcu, nec volutpat est felis vel metus.
-  Vestibulum sit amet erat at nulla eleifend gravida.
-author_notes:
-- Equal contribution
-- Equal contribution
+abstract: Environment, litter composition and decomposer community are known to be the main drivers of litter decomposition in aquatic ecosystems. However, it remains unclear whether litter quality or functional diversity prevails under warming conditions. Using tank bromeliad ecosystems, we evaluated the combined effects of warming, litter quality and litter functional diversity on the decomposition process. We also assessed the contribution of macroinvertebrates and microorganisms in explaining litter decomposition patterns using litter bags made with different mesh sizes. Our results showed that litter decomposition was driven by litter functional diversity and was increasingly higher under warming, in both mesh sizes. Decomposition was explained by increasing litter dissimilarities in C and N. Our results highlight the importance of considering different aspects of litter characteristics (e.g., quality and functional diversity) in order to predict the decomposition process in freshwater ecosystems. Considering the joint effect of warming and litter traits aspects allow a more refined understanding of the underlying mechanisms of climate change and biodiversity shifts effects on ecosystem functioning.
 authors:
 - admin
-- Robert Ford
-date: "2015-09-01T00:00:00Z"
+- Gustavo Q. Romero
+#date: "2015-09-01T00:00:00Z"
 doi: ""
 featured: false
 image:
-  caption: 'Image credit: [**Unsplash**](https://unsplash.com/photos/jdD8gXaTZsc)'
+  caption: 'Image credit: Gustavo Migliorini'
   focal_point: ""
   preview_only: false
 projects: []
-publication: '*Journal of Source Themes, 1*(1)'
+publication: '*Scientific reports, 10*(1)'
 publication_short: ""
 publication_types:
 - "2"
-publishDate: "2017-01-01T00:00:00Z"
-slides: example
-summary: Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis posuere tellus
-  ac convallis placerat. Proin tincidunt magna sed ex sollicitudin condimentum.
+publishDate: "2020-11-23T00:00:00Z"
+#slides: example
+summary: Warming and leaf litter functional diversity, not litter quality, drive decomposition in a freshwater ecosystem
 tags:
 - Source Themes
-title: An example journal article
-url_code: ""
+title: Warming and leaf litter functional diversity, not litter quality, drive decomposition in a freshwater ecosystem
+url_code: "https://github.com/ghmigliorini/Doutorado_Artigo1"
 url_dataset: ""
-url_pdf: http://arxiv.org/pdf/1512.04133v1
-url_poster: ""
-url_project: ""
-url_slides: ""
-url_source: ""
-url_video: ""
+url_pdf: https://www.nature.com/articles/s41598-020-77382-7
+# url_poster: ""
+# url_project: ""
+# url_slides: ""
+# url_source: ""
+# url_video: ""
 ---
-
-{{% callout note %}}
-Click the *Cite* button above to demo the feature to enable visitors to import publication metadata into their reference management software.
-{{% /callout %}}
-
-{{% callout note %}}
-Create your slides in Markdown - click the *Slides* button to check out the example.
-{{% /callout %}}
-
-Supplementary notes can be added here, including [code, math, and images](https://wowchemy.com/docs/writing-markdown-latex/).

@@ -6,7 +6,7 @@ theme: "starter-hugo-academic"
 
 title: Academic # Website name
 baseurl: 'https://gustavomigliorini.netlify.app/' # Website URL
-copyright: '' # Footer text, e.g. '© {year} Me'
+copyright: 'Copyright gustavomigliorini© 2021'
 
 ############################
 ## LANGUAGE
