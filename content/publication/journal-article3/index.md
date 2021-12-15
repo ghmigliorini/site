@@ -14,7 +14,7 @@ image:
   focal_point: ""
   preview_only: false
 projects: []
-publication: '*Scientific reports, 10*(1)'
+publication: '*Scientific Reports, 10*(1)'
 publication_short: ""
 publication_types:
 - "2"

@@ -19,7 +19,7 @@ image:
   focal_point: ""
   preview_only: false
 projects: []
-publication: '*nature climate change, 10*(11)'
+publication: '*Nature Climate Change, 10*(11)'
 publication_short: ""
 publication_types:
 - "2"
