@@ -1,0 +1,98 @@
+---
+title: Analysis of Palmer penguins dataset in R
+author:
+  - admin
+date: '2021-12-16'
+slug: teste-rmarkdown
+categories: ["Data Science"]
+tags: ["R", "Tidyverse"]
+subtitle: 'Testing a post with R markdown'
+summary: 'Testing a post with R markdown'
+authors: []
+lastmod: '2021-12-16T16:07:37-03:00'
+featured: no
+image:
+  caption: 'Image credit: unsplash'
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r echo = FALSE}
+knitr::opts_chunk$set(fig.retina = 2)
+```
+Here I make some basic data analysis using the palmer penguin dataset. Click [here](https://allisonhorst.github.io/palmerpenguins/) for more information on the dataset. 
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(GGally)
+library(palmerpenguins)
+```
+
+```{r}
+data(penguins)
+penguins
+```
+```{r}
+summary(penguins)
+```
+Exploring the dataset we can see some "problems", i.e., the cateorical variables are not balanced and there are Na's in some variables. Let's remove the NA's before moving on to some analysis.
+
+```{r}
+df_clean <- penguins |>
+  drop_na()
+
+summary(df_clean)
+```
+It could be nice to check correlations among variables in order to have some direction for next steps
+
+```{r, message=FALSE}
+df_clean |>
+  select(-year) |>
+  ggpairs()
+```
+
+After analysing the correlations we could as some questions:
+- How do the morphometric variables of penguins change across species and the island they live?
+- Do the bill and flipper sizes explain the weight of penguins?
+
+```{r}
+ggplot(df_clean, aes(x=species, y=bill_length_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_bw()
+```
+We can see that the species do not co-occur in all the islands, and none of the islands are home to the three penguim species.
+Males have longer bill than females. It's possible to observe that the place they live do not alter the bill length. Let's analyse another bill measurement.
+
+```{r}
+ggplot(df_clean, aes(x=species, y=bill_depth_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_bw()
+```
+
+```{r}
+ggplot(df_clean, aes(x=species, y=flipper_length_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_test()
+```
+
+```{r}
+ggplot(df_clean, aes(x=species, y=body_mass_g, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_test()
+```
+
+```{r, message=FALSE}
+ggplot(df_clean, aes(x=flipper_length_mm, y=body_mass_g, color = species, fill=species)) +
+  geom_smooth(method = "lm") +
+  geom_jitter() +
+  theme_test()
+```
+

@@ -1,0 +1,117 @@
+---
+title: Analysis of Palmer penguins dataset in R
+author:
+  - admin
+date: '2021-12-16'
+slug: teste-rmarkdown
+categories: ["Data Science"]
+tags: ["R", "Tidyverse"]
+subtitle: 'Testing a post with R markdown'
+summary: 'Testing a post with R markdown'
+authors: []
+lastmod: '2021-12-16T16:07:37-03:00'
+featured: no
+image:
+  caption: 'Image credit: unsplash'
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  html_document:
+    keep_md: yes
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>Here I make some basic data analysis using the palmer penguin dataset. Click <a href="https://allisonhorst.github.io/palmerpenguins/">here</a> for more information on the dataset.</p>
+<pre class="r"><code>library(tidyverse)
+library(GGally)
+library(palmerpenguins)</code></pre>
+<pre class="r"><code>data(penguins)
+penguins</code></pre>
+<pre><code>## # A tibble: 344 x 8
+##    species island    bill_length_mm bill_depth_mm flipper_length_mm body_mass_g
+##    &lt;fct&gt;   &lt;fct&gt;              &lt;dbl&gt;         &lt;dbl&gt;             &lt;int&gt;       &lt;int&gt;
+##  1 Adelie  Torgersen           39.1          18.7               181        3750
+##  2 Adelie  Torgersen           39.5          17.4               186        3800
+##  3 Adelie  Torgersen           40.3          18                 195        3250
+##  4 Adelie  Torgersen           NA            NA                  NA          NA
+##  5 Adelie  Torgersen           36.7          19.3               193        3450
+##  6 Adelie  Torgersen           39.3          20.6               190        3650
+##  7 Adelie  Torgersen           38.9          17.8               181        3625
+##  8 Adelie  Torgersen           39.2          19.6               195        4675
+##  9 Adelie  Torgersen           34.1          18.1               193        3475
+## 10 Adelie  Torgersen           42            20.2               190        4250
+## # ... with 334 more rows, and 2 more variables: sex &lt;fct&gt;, year &lt;int&gt;</code></pre>
+<pre class="r"><code>summary(penguins)</code></pre>
+<pre><code>##       species          island    bill_length_mm  bill_depth_mm  
+##  Adelie   :152   Biscoe   :168   Min.   :32.10   Min.   :13.10  
+##  Chinstrap: 68   Dream    :124   1st Qu.:39.23   1st Qu.:15.60  
+##  Gentoo   :124   Torgersen: 52   Median :44.45   Median :17.30  
+##                                  Mean   :43.92   Mean   :17.15  
+##                                  3rd Qu.:48.50   3rd Qu.:18.70  
+##                                  Max.   :59.60   Max.   :21.50  
+##                                  NA&#39;s   :2       NA&#39;s   :2      
+##  flipper_length_mm  body_mass_g       sex           year     
+##  Min.   :172.0     Min.   :2700   female:165   Min.   :2007  
+##  1st Qu.:190.0     1st Qu.:3550   male  :168   1st Qu.:2007  
+##  Median :197.0     Median :4050   NA&#39;s  : 11   Median :2008  
+##  Mean   :200.9     Mean   :4202                Mean   :2008  
+##  3rd Qu.:213.0     3rd Qu.:4750                3rd Qu.:2009  
+##  Max.   :231.0     Max.   :6300                Max.   :2009  
+##  NA&#39;s   :2         NA&#39;s   :2</code></pre>
+<p>Exploring the dataset we can see some “problems”, i.e., the cateorical variables are not balanced and there are Na’s in some variables. Let’s remove the NA’s before moving on to some analysis.</p>
+<pre class="r"><code>df_clean &lt;- penguins |&gt;
+  drop_na()
+
+summary(df_clean)</code></pre>
+<pre><code>##       species          island    bill_length_mm  bill_depth_mm  
+##  Adelie   :146   Biscoe   :163   Min.   :32.10   Min.   :13.10  
+##  Chinstrap: 68   Dream    :123   1st Qu.:39.50   1st Qu.:15.60  
+##  Gentoo   :119   Torgersen: 47   Median :44.50   Median :17.30  
+##                                  Mean   :43.99   Mean   :17.16  
+##                                  3rd Qu.:48.60   3rd Qu.:18.70  
+##                                  Max.   :59.60   Max.   :21.50  
+##  flipper_length_mm  body_mass_g       sex           year     
+##  Min.   :172       Min.   :2700   female:165   Min.   :2007  
+##  1st Qu.:190       1st Qu.:3550   male  :168   1st Qu.:2007  
+##  Median :197       Median :4050                Median :2008  
+##  Mean   :201       Mean   :4207                Mean   :2008  
+##  3rd Qu.:213       3rd Qu.:4775                3rd Qu.:2009  
+##  Max.   :231       Max.   :6300                Max.   :2009</code></pre>
+<p>It could be nice to check correlations among variables in order to have some direction for next steps</p>
+<pre class="r"><code>df_clean |&gt;
+  select(-year) |&gt;
+  ggpairs()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>After analysing the correlations we could as some questions:
+- How do the morphometric variables of penguins change across species and the island they live?
+- Do the bill and flipper sizes explain the weight of penguins?</p>
+<pre class="r"><code>ggplot(df_clean, aes(x=species, y=bill_length_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_bw()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="672" />
+We can see that the species do not co-occur in all the islands, and none of the islands are home to the three penguim species.
+Males have longer bill than females. It’s possible to observe that the place they live do not alter the bill length. Let’s analyse another bill measurement.</p>
+<pre class="r"><code>ggplot(df_clean, aes(x=species, y=bill_depth_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_bw()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(df_clean, aes(x=species, y=flipper_length_mm, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_test()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(df_clean, aes(x=species, y=body_mass_g, fill=sex)) +
+  geom_boxplot() +
+  facet_wrap(~island) +
+  theme_test()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(df_clean, aes(x=flipper_length_mm, y=body_mass_g, color = species, fill=species)) +
+  geom_smooth(method = &quot;lm&quot;) +
+  geom_jitter() +
+  theme_test()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
