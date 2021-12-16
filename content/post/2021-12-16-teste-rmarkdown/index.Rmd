@@ -55,9 +55,10 @@ df_clean |>
   ggpairs()
 ```
 
-After analysing the correlations we could as some questions:
-- How do the morphometric variables of penguins change across species and the island they live?
-- Do the bill and flipper sizes explain the weight of penguins?
+After analysing the correlations we could ask some questions:
+
+  - How do the morphometric variables of penguins change across species and the island they live?
+  - Do the bill and flipper sizes explain the weight of penguins?
 
 ```{r}
 ggplot(df_clean, aes(x=species, y=bill_length_mm, fill=sex)) +

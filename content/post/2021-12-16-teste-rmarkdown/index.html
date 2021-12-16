@@ -85,9 +85,11 @@ summary(df_clean)</code></pre>
   select(-year) |&gt;
   ggpairs()</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
-<p>After analysing the correlations we could as some questions:
-- How do the morphometric variables of penguins change across species and the island they live?
-- Do the bill and flipper sizes explain the weight of penguins?</p>
+<p>After analysing the correlations we could ask some questions:</p>
+<ul>
+<li>How do the morphometric variables of penguins change across species and the island they live?</li>
+<li>Do the bill and flipper sizes explain the weight of penguins?</li>
+</ul>
 <pre class="r"><code>ggplot(df_clean, aes(x=species, y=bill_length_mm, fill=sex)) +
   geom_boxplot() +
   facet_wrap(~island) +
