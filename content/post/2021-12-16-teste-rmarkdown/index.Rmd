@@ -57,7 +57,7 @@ df_clean |>
 
 After analysing the correlations we could ask some questions:
 
-  - How do the morphometric variables of penguins change across species and the island they live?
+  - How do the morphometric variables change across species and the island they live?
   - Do the bill and flipper sizes explain the weight of penguins?
 
 ```{r}
@@ -67,7 +67,7 @@ ggplot(df_clean, aes(x=species, y=bill_length_mm, fill=sex)) +
   theme_bw()
 ```
 We can see that the species do not co-occur in all the islands, and none of the islands are home to the three penguim species.
-Males have longer bill than females. It's possible to observe that the place they live do not alter the bill length. Let's analyse another bill measurement.
+Males have longer bill than females. It's possible to observe that the place they live do not alter the bill length. Let's check the another bill measurement.
 
 ```{r}
 ggplot(df_clean, aes(x=species, y=bill_depth_mm, fill=sex)) +
@@ -97,3 +97,4 @@ ggplot(df_clean, aes(x=flipper_length_mm, y=body_mass_g, color = species, fill=s
   theme_test()
 ```
 
+It's very clear that the weight of Palmer penguins is influenced by the flipper size, which probably may be related to their efficiency to catch fishes.
