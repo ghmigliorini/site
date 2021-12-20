@@ -66,10 +66,8 @@ theme_update(axis.title.x = element_text(color = "grey30",
 # load data
 # can be loaded using the tidytuesdayR package
 mortality <- readxl::read_xlsx("C:/Users/Gustavo/Downloads/global_mortality.xlsx")
-head(mortality)
-```
+#head(mortality)
 
-```{r}
 # check data
 summary(mortality)
 ```
@@ -97,6 +95,7 @@ df_br <- mortality |>
   mutate(cause = str_to_title(cause))
   
 ```
+
 
 ```{r, warnings=FALSE}
 # plot 

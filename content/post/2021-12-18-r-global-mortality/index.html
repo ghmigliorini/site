@@ -56,24 +56,9 @@ theme_update(axis.title.x = element_text(color = &quot;grey30&quot;,
 <pre class="r"><code># load data
 # can be loaded using the tidytuesdayR package
 mortality &lt;- readxl::read_xlsx(&quot;C:/Users/Gustavo/Downloads/global_mortality.xlsx&quot;)
-head(mortality)</code></pre>
-<pre><code>## # A tibble: 6 x 35
-##   country     country_code  year `Cardiovascular~ `Cancers (%)` `Respiratory di~
-##   &lt;chr&gt;       &lt;chr&gt;        &lt;dbl&gt;            &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
-## 1 Afghanistan AFG           1990             17.6          4.03             2.11
-## 2 Afghanistan AFG           1991             17.8          4.05             2.13
-## 3 Afghanistan AFG           1992             18.4          4.17             2.21
-## 4 Afghanistan AFG           1993             19.0          4.27             2.28
-## 5 Afghanistan AFG           1994             19.1          4.26             2.31
-## 6 Afghanistan AFG           1995             19.9          4.39             2.41
-## # ... with 29 more variables: Diabetes (%) &lt;dbl&gt;, Dementia (%) &lt;dbl&gt;,
-## #   Lower respiratory infections (%) &lt;dbl&gt;, Neonatal deaths (%) &lt;dbl&gt;,
-## #   Diarrheal diseases (%) &lt;dbl&gt;, Road accidents (%) &lt;dbl&gt;,
-## #   Liver disease (%) &lt;dbl&gt;, Tuberculosis (%) &lt;dbl&gt;, Kidney disease (%) &lt;dbl&gt;,
-## #   Digestive diseases (%) &lt;dbl&gt;, HIV/AIDS (%) &lt;dbl&gt;, Suicide (%) &lt;dbl&gt;,
-## #   Malaria (%) &lt;dbl&gt;, Homicide (%) &lt;dbl&gt;, Nutritional deficiencies (%) &lt;dbl&gt;,
-## #   Meningitis (%) &lt;dbl&gt;, Protein-energy malnutrition (%) &lt;dbl&gt;, ...</code></pre>
-<pre class="r"><code># check data
+#head(mortality)
+
+# check data
 summary(mortality)</code></pre>
 <pre><code>##    country          country_code            year     
 ##  Length:6156        Length:6156        Min.   :1990  
