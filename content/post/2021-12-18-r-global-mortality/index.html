@@ -1,13 +1,13 @@
 ---
-title: R - Global mortality dataset - Tidytuesday
+title: R - Mortality in Brazil
 author:
   - admin
 date: '2021-12-18'
 slug: r-global-mortality
 categories: ["Data Science"]
 tags: ["R", "Tidyverse", "Tidytuesday"]
-subtitle: 'Data visualization with the global mortality dataset'
-summary: 'Data visualization with the global mortality dataset'
+subtitle: 'Data visualization using the global mortality dataset'
+summary: 'Data visualization using the global mortality dataset'
 authors: []
 lastmod: '2021-12-18T18:18:38-03:00'
 featured: no
@@ -24,48 +24,57 @@ output:
 <script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
 
 
-<pre class="r"><code>library(tidyverse)
-library(tidytuesdayR)
+<p>Visualizing changes in mortality rates in Brazil according to different causes. Data from 1990 to 2016. This dataset is part of the <a href="https://github.com/rfordatascience/tidytuesday">Tidytuesday</a> project and is available <a href="https://github.com/rfordatascience/tidytuesday/tree/master/data/2018/2018-04-16">here</a>.</p>
+<pre class="r"><code># load packages
+library(tidyverse)
 library(showtext)
 library(cowplot)
 library(ggtext)</code></pre>
-<pre class="r"><code>font_add_google(&quot;Roboto&quot;, &quot;roboto&quot;)
-font_add_google(&quot;Oswald&quot;, &quot;oswald&quot;)
-font_add_google(&quot;Heebo&quot;, &quot;heebo&quot;)
-font_add_google(&quot;Share Tech Mono&quot;, &quot;techmono&quot;)
+<pre class="r"><code># Some initial configs for the plots
+
+# font_add_google(&quot;Roboto&quot;, &quot;roboto&quot;) # remove the &#39;#&#39; to run these lines for the first time
+# font_add_google(&quot;Oswald&quot;, &quot;oswald&quot;)
+# font_add_google(&quot;Heebo&quot;, &quot;heebo&quot;)
+# font_add_google(&quot;Share Tech Mono&quot;, &quot;techmono&quot;)
 showtext_opts(dpi = 320)
-showtext_auto(enable = TRUE)</code></pre>
-<pre class="r"><code>theme_set(theme_void(base_family = &quot;Roboto&quot;))
-theme_update(axis.title.x = element_text(color = &quot;grey30&quot;, size = 14, margin = margin(15,0,0,0)),
-             axis.text.x = element_text(color = &quot;grey30&quot;, size = 14, margin = margin(10,0,0,0)),
+showtext_auto(enable = TRUE)
+
+theme_set(theme_void(base_family = &quot;Roboto&quot;))
+theme_update(axis.title.x = element_text(color = &quot;grey30&quot;, 
+                                         size = 14, 
+                                         margin = margin(15,0,0,0)),
+             axis.text.x = element_text(color = &quot;grey30&quot;, 
+                                        size = 14, 
+                                        margin = margin(10,0,0,0)),
              axis.ticks.x = element_line(),
              axis.title.y = element_blank(),
-             axis.text.y = element_text(color = &quot;grey30&quot;, size = 14, hjust = 1),
+             axis.text.y = element_text(color = &quot;grey30&quot;, 
+                                        size = 14, 
+                                        hjust = 1),
              axis.ticks.y = element_line()
              )</code></pre>
-<pre class="r"><code>mortality &lt;- readxl::read_xlsx(&quot;C:/Users/Gustavo/Downloads/global_mortality.xlsx&quot;)
-mortality</code></pre>
-<pre><code>## # A tibble: 6,156 x 35
-##    country     country_code  year `Cardiovascular~ `Cancers (%)` `Respiratory di~
-##    &lt;chr&gt;       &lt;chr&gt;        &lt;dbl&gt;            &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
-##  1 Afghanistan AFG           1990             17.6          4.03             2.11
-##  2 Afghanistan AFG           1991             17.8          4.05             2.13
-##  3 Afghanistan AFG           1992             18.4          4.17             2.21
-##  4 Afghanistan AFG           1993             19.0          4.27             2.28
-##  5 Afghanistan AFG           1994             19.1          4.26             2.31
-##  6 Afghanistan AFG           1995             19.9          4.39             2.41
-##  7 Afghanistan AFG           1996             20.4          4.48             2.49
-##  8 Afghanistan AFG           1997             20.4          4.45             2.49
-##  9 Afghanistan AFG           1998             19.6          4.26             2.41
-## 10 Afghanistan AFG           1999             21.1          4.57             2.60
-## # ... with 6,146 more rows, and 29 more variables: Diabetes (%) &lt;dbl&gt;,
-## #   Dementia (%) &lt;dbl&gt;, Lower respiratory infections (%) &lt;dbl&gt;,
-## #   Neonatal deaths (%) &lt;dbl&gt;, Diarrheal diseases (%) &lt;dbl&gt;,
-## #   Road accidents (%) &lt;dbl&gt;, Liver disease (%) &lt;dbl&gt;, Tuberculosis (%) &lt;dbl&gt;,
-## #   Kidney disease (%) &lt;dbl&gt;, Digestive diseases (%) &lt;dbl&gt;, HIV/AIDS (%) &lt;dbl&gt;,
-## #   Suicide (%) &lt;dbl&gt;, Malaria (%) &lt;dbl&gt;, Homicide (%) &lt;dbl&gt;,
-## #   Nutritional deficiencies (%) &lt;dbl&gt;, Meningitis (%) &lt;dbl&gt;, ...</code></pre>
-<pre class="r"><code>summary(mortality)</code></pre>
+<pre class="r"><code># load data
+# can be loaded using the tidytuesdayR package
+mortality &lt;- readxl::read_xlsx(&quot;C:/Users/Gustavo/Downloads/global_mortality.xlsx&quot;)
+head(mortality)</code></pre>
+<pre><code>## # A tibble: 6 x 35
+##   country     country_code  year `Cardiovascular~ `Cancers (%)` `Respiratory di~
+##   &lt;chr&gt;       &lt;chr&gt;        &lt;dbl&gt;            &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
+## 1 Afghanistan AFG           1990             17.6          4.03             2.11
+## 2 Afghanistan AFG           1991             17.8          4.05             2.13
+## 3 Afghanistan AFG           1992             18.4          4.17             2.21
+## 4 Afghanistan AFG           1993             19.0          4.27             2.28
+## 5 Afghanistan AFG           1994             19.1          4.26             2.31
+## 6 Afghanistan AFG           1995             19.9          4.39             2.41
+## # ... with 29 more variables: Diabetes (%) &lt;dbl&gt;, Dementia (%) &lt;dbl&gt;,
+## #   Lower respiratory infections (%) &lt;dbl&gt;, Neonatal deaths (%) &lt;dbl&gt;,
+## #   Diarrheal diseases (%) &lt;dbl&gt;, Road accidents (%) &lt;dbl&gt;,
+## #   Liver disease (%) &lt;dbl&gt;, Tuberculosis (%) &lt;dbl&gt;, Kidney disease (%) &lt;dbl&gt;,
+## #   Digestive diseases (%) &lt;dbl&gt;, HIV/AIDS (%) &lt;dbl&gt;, Suicide (%) &lt;dbl&gt;,
+## #   Malaria (%) &lt;dbl&gt;, Homicide (%) &lt;dbl&gt;, Nutritional deficiencies (%) &lt;dbl&gt;,
+## #   Meningitis (%) &lt;dbl&gt;, Protein-energy malnutrition (%) &lt;dbl&gt;, ...</code></pre>
+<pre class="r"><code># check data
+summary(mortality)</code></pre>
 <pre><code>##    country          country_code            year     
 ##  Length:6156        Length:6156        Min.   :1990  
 ##  Class :character   Class :character   1st Qu.:1996  
@@ -154,9 +163,11 @@ mortality</code></pre>
 ##  3rd Qu.: 0.01695      3rd Qu.: 0.0170   3rd Qu.:0.0040  
 ##  Max.   :65.29420      Max.   :82.3170   Max.   :5.8770  
 ##                        NA&#39;s   :1398      NA&#39;s   :1398</code></pre>
-<pre class="r"><code>mortality &lt;- janitor::clean_names(mortality) |&gt;
+<pre class="r"><code># clean variable names
+mortality &lt;- janitor::clean_names(mortality) |&gt;
   rename_all(~str_remove(., &#39;_percent&#39;))</code></pre>
-<pre class="r"><code>df_br &lt;- mortality |&gt; 
+<pre class="r"><code># prepare the data
+df_br &lt;- mortality |&gt; 
   filter(country ==&quot;Brazil&quot;) |&gt;
   select(-conflict &amp; -terrorism) |&gt;
   gather(cause, percentage, cardiovascular_diseases:natural_disasters) |&gt;
@@ -168,38 +179,43 @@ mortality</code></pre>
   mutate(label_cod = as.numeric(as.factor(cause))) |&gt;
   mutate(cause = str_replace_all(cause, &quot;_&quot;, &quot; &quot;)) |&gt;
   mutate(cause = str_to_title(cause))</code></pre>
-<pre class="r"><code>label_y &lt;- df_br$label_cod
+<pre class="r"><code># plot 
+label_y &lt;- df_br$label_cod
 labels_cause &lt;- df_br$cause
 
 plot_br &lt;- df_br |&gt;
   ggplot() +
-  geom_point(aes(x=year_2016, y=label_cod), size = 3, color=&quot;#006d2c&quot;) +
-  geom_segment(aes(x = year_2016, xend=year_1990, y=label_cod, yend=label_cod), size = 1.5, color=&quot;#006d2c&quot;, alpha = 0.5) +
-  scale_y_continuous(breaks = label_y, labels = labels_cause) +
+  geom_point(aes(x=year_2016, y=desc(label_cod)), size = 3.5, color=&quot;#006d2c&quot;) +
+  geom_segment(aes(x = year_2016, xend=year_1990, 
+                   y=desc(label_cod), yend=desc(label_cod)), 
+               size = 3, color=&quot;#006d2c&quot;, alpha = 0.5) +
+  scale_y_continuous(breaks = desc(label_y), labels = labels_cause) +
   scale_x_continuous(labels=scales::percent_format(accuracy = 1, scale = 1)) +
   labs(x = &quot;Percentage change&quot;) +
   guides(color = &quot;none&quot;) +
-  theme(panel.grid.major.x = element_line(linetype = &quot;14&quot;, size = 0.3, color = &quot;grey20&quot;))</code></pre>
-<pre class="r"><code>fundo &lt;- ggplot() +
+  theme(panel.grid.major.x = element_line(linetype = &quot;14&quot;, 
+                                          size = 0.3, color = &quot;grey20&quot;))</code></pre>
+<pre class="r"><code># graphic background
+back_plt &lt;- ggplot() +
   scale_x_continuous(limits = c(0,80), expand = c(0,0))+
   scale_y_continuous(limits = c(0,60), expand = c(0,0))+
   coord_fixed() +
-  labs(title = &quot;Mortality in Brazil&quot;, subtitle = &quot;Change in the percentage of deaths from 1990 to 2016&quot;) +
+  labs(title = &quot;Mortality in Brazil&quot;, 
+       subtitle = &quot;Change in the percentage of deaths from 1990 to 2016&quot;) +
   theme_void() +
   theme(plot.background = element_rect(fill = &quot;#E8E8E8&quot;, color = NA),
-        plot.title = element_text(family = &quot;oswald&quot;, color = &quot;#737373&quot;, face = &quot;bold&quot;, size = 28, hjust = 0.01, margin = margin(10,0,5,0)),
-        plot.subtitle = element_textbox(family =&quot;roboto&quot;, color = &quot;#737373&quot;, size = 20, hjust = 0.02))
+        plot.title = element_text(family = &quot;oswald&quot;, color = &quot;#737373&quot;, 
+                                  face = &quot;bold&quot;, size = 28, hjust = 0.01, 
+                                  margin = margin(10,0,5,0)),
+        plot.subtitle = element_textbox(family =&quot;roboto&quot;, color = &quot;#737373&quot;, 
+                                        size = 20, hjust = 0.02))
 
-final &lt;- ggdraw(fundo) + 
-  draw_plot(plot_br, width = 0.9, height = 0.85, y = 0.05, x = 0.05) +
-  draw_text(x = 0.35, y = 0.02, 
+# final plot
+final &lt;- ggdraw(back_plt) + 
+  draw_plot(plot_br, width = 0.95, height = 0.85, y = 0.05, x = 0.02) +
+  draw_text(x = 0.33, y = 0.02, 
             text = &quot;Author: Gustavo H. Migliorini | Data: Global mortality&quot;, 
             family = &quot;techmono&quot;, size = 12, color = &quot;grey30&quot;, hjust = 1)</code></pre>
-<pre class="r"><code>ragg::agg_png(here::here(&quot;plots&quot;, paste0(&quot;mortality&quot;,&quot;.png&quot;)), res = 320, width = 12, height = 10, units = &quot;in&quot;)
-
-final
-
-dev.off()</code></pre>
 <pre><code>## png 
 ##   2</code></pre>
 <p><img src="{{< blogdown/postref >}}index_files/figure-html/mortality.png" /><!-- --></p>
