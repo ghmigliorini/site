@@ -46,11 +46,11 @@ showtext_auto(enable = TRUE)
 
 ```{r}
 theme_set(theme_void(base_family = "Roboto"))
-theme_update(axis.title.x = element_text(color = "grey30", size = 9, margin = margin(15,0,0,0)),
-             axis.text.x = element_text(color = "grey30", size = 9, margin = margin(10,0,0,0)),
+theme_update(axis.title.x = element_text(color = "grey30", size = 14, margin = margin(15,0,0,0)),
+             axis.text.x = element_text(color = "grey30", size = 14, margin = margin(10,0,0,0)),
              axis.ticks.x = element_line(),
              axis.title.y = element_blank(),
-             axis.text.y = element_text(color = "grey30", size = 9, hjust = 1),
+             axis.text.y = element_text(color = "grey30", size = 14, hjust = 1),
              axis.ticks.y = element_line()
              )
 ```
@@ -104,7 +104,7 @@ plot_br <- df_br |>
 ```
 
 
-```{r, warnings=FALSE, message=FALSE}
+```{r, warning=FALSE, message=FALSE,}
 fundo <- ggplot() +
   scale_x_continuous(limits = c(0,80), expand = c(0,0))+
   scale_y_continuous(limits = c(0,60), expand = c(0,0))+
@@ -112,20 +112,20 @@ fundo <- ggplot() +
   labs(title = "Mortality in Brazil", subtitle = "Change in the percentage of deaths from 1990 to 2016") +
   theme_void() +
   theme(plot.background = element_rect(fill = "#E8E8E8", color = NA),
-        plot.title = element_text(family = "oswald", color = "#737373", face = "bold", size = 20),
-        plot.subtitle = element_textbox(family ="roboto", color = "#737373", size = 14))
+        plot.title = element_text(family = "oswald", color = "#737373", face = "bold", size = 28, hjust = 0.01, margin = margin(10,0,5,0)),
+        plot.subtitle = element_textbox(family ="roboto", color = "#737373", size = 20, hjust = 0.02))
 
 final <- ggdraw(fundo) + 
-  draw_plot(plot_br, width = 0.75, height = 0.85, y = 0.05, x = 0.15) +
-  draw_text(x = 0.45, y = 0.01, 
+  draw_plot(plot_br, width = 0.9, height = 0.85, y = 0.05, x = 0.05) +
+  draw_text(x = 0.35, y = 0.02, 
             text = "Author: Gustavo H. Migliorini | Data: Global mortality", 
-            family = "techmono", size = 8, color = "grey30", hjust = 1)
+            family = "techmono", size = 12, color = "grey30", hjust = 1)
 
 ```
 
 
-```{r}
-ragg::agg_png(here::here("plots", paste("mortality", ".png")), res = 320, width = 8, height = 6, units = "in")
+```{r, warning=FALSE, message=FALSE}
+ragg::agg_png(here::here("plots", paste("mortality", ".png")), res = 320, width = 12, height = 10, units = "in")
 
 final
 
