@@ -25,7 +25,24 @@ output:
 
 
 <pre class="r"><code>library(tidyverse)
-library(tidytuesdayR)</code></pre>
+library(tidytuesdayR)
+library(showtext)
+library(cowplot)
+library(ggtext)</code></pre>
+<pre class="r"><code>font_add_google(&quot;Roboto&quot;, &quot;roboto&quot;)
+font_add_google(&quot;Oswald&quot;, &quot;oswald&quot;)
+font_add_google(&quot;Heebo&quot;, &quot;heebo&quot;)
+font_add_google(&quot;Share Tech Mono&quot;, &quot;techmono&quot;)
+showtext_opts(dpi = 320)
+showtext_auto(enable = TRUE)</code></pre>
+<pre class="r"><code>theme_set(theme_void(base_family = &quot;Roboto&quot;))
+theme_update(axis.title.x = element_text(color = &quot;grey30&quot;, size = 9, margin = margin(15,0,0,0)),
+             axis.text.x = element_text(color = &quot;grey30&quot;, size = 9, margin = margin(10,0,0,0)),
+             axis.ticks.x = element_line(),
+             axis.title.y = element_blank(),
+             axis.text.y = element_text(color = &quot;grey30&quot;, size = 9, hjust = 1),
+             axis.ticks.y = element_line()
+             )</code></pre>
 <pre class="r"><code>mortality &lt;- readxl::read_xlsx(&quot;C:/Users/Gustavo/Downloads/global_mortality.xlsx&quot;)
 mortality</code></pre>
 <pre><code>## # A tibble: 6,156 x 35
@@ -139,20 +156,1907 @@ mortality</code></pre>
 ##                        NA&#39;s   :1398      NA&#39;s   :1398</code></pre>
 <pre class="r"><code>mortality &lt;- janitor::clean_names(mortality) |&gt;
   rename_all(~str_remove(., &#39;_percent&#39;))</code></pre>
-<pre class="r"><code>df_br &lt;- mortality |&gt;
+<pre class="r"><code>df_br &lt;- mortality |&gt; 
   filter(country ==&quot;Brazil&quot;) |&gt;
-  select(year, homicide, cancers, cardiovascular_diseases) |&gt;
-  gather(cause, percentage, homicide:cardiovascular_diseases) |&gt;
-  mutate(across(cause, as_factor))
+  select(-conflict &amp; -terrorism) |&gt;
+  gather(cause, percentage, cardiovascular_diseases:natural_disasters) |&gt;
+  group_by(cause) |&gt;
+  filter(year == 1990 | year == max(year)) |&gt;
+  ungroup() |&gt;
+  mutate(cause = fct_relevel(cause, unique(cause)), year = paste0(&quot;year_&quot;, year)) |&gt;
+  pivot_wider(id_cols = &quot;cause&quot;, names_from = &quot;year&quot;, values_from = &quot;percentage&quot;) |&gt;
+  mutate(label_cod = as.numeric(as.factor(cause))) |&gt;
+  mutate(cause = str_replace_all(cause, &quot;_&quot;, &quot; &quot;)) |&gt;
+  mutate(cause = str_to_title(cause))</code></pre>
+<pre class="r"><code>label_y &lt;- df_br$label_cod
+labels_cause &lt;- df_br$cause
 
-ggplot(df_br, aes(x=year, y=percentage, color=cause, group=cause)) +
-  geom_line() +
-  geom_text(data=filter(df_br, year== max(year)), 
-            aes(label = cause), hjust = 0, nudge_x = 0.1) + 
-  coord_cartesian(clip = &#39;off&#39;) +
-  scale_x_continuous(breaks = c(1990, 1995, 2000, 2005, 2010, 2016)) +
-  scale_y_continuous(breaks = c(5, 10, 15, 20, 25, 30)) +
+plot_br &lt;- df_br |&gt;
+  ggplot() +
+  geom_point(aes(x=year_2016, y=label_cod), size = 3, color=&quot;#006d2c&quot;) +
+  geom_segment(aes(x = year_2016, xend=year_1990, y=label_cod, yend=label_cod), size = 1.5, color=&quot;#006d2c&quot;, alpha = 0.5) +
+  scale_y_continuous(breaks = label_y, labels = labels_cause) +
+  scale_x_continuous(labels=scales::percent_format(accuracy = 1, scale = 1)) +
+  labs(x = &quot;Percentage change&quot;) +
+  guides(color = &quot;none&quot;) +
+  theme(panel.grid.major.x = element_line(linetype = &quot;14&quot;, size = 0.3, color = &quot;grey20&quot;))</code></pre>
+<pre class="r"><code>fundo &lt;- ggplot() +
+  scale_x_continuous(limits = c(0,80), expand = c(0,0))+
+  scale_y_continuous(limits = c(0,60), expand = c(0,0))+
+  coord_fixed() +
+  labs(title = &quot;Mortality in Brazil&quot;, subtitle = &quot;Change in the percentage of deaths from 1990 to 2016&quot;) +
   theme_void() +
   theme(plot.background = element_rect(fill = &quot;#E8E8E8&quot;, color = NA),
-        legend.position = &quot;none&quot;, plot.margin = margin(0.1, 3.7, 0.1, 0.1, &quot;cm&quot;))</code></pre>
-<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+        plot.title = element_text(family = &quot;oswald&quot;, color = &quot;#737373&quot;, face = &quot;bold&quot;, size = 20),
+        plot.subtitle = element_textbox(family =&quot;roboto&quot;, color = &quot;#737373&quot;, size = 14))
+
+final &lt;- ggdraw(fundo) + 
+  draw_plot(plot_br, width = 0.75, height = 0.85, y = 0.05, x = 0.15) +
+  draw_text(x = 0.45, y = 0.01, 
+            text = &quot;Author: Gustavo H. Migliorini | Data: Global mortality&quot;, 
+            family = &quot;techmono&quot;, size = 8, color = &quot;grey30&quot;, hjust = 1)</code></pre>
+<pre><code>## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;oswald&#39; not found in PostScript font database</code></pre>
+<pre><code>## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;roboto&#39; not found in PostScript font database</code></pre>
+<pre><code>## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;roboto&#39; not found in PostScript font database</code></pre>
+<pre><code>## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;roboto&#39; not found in PostScript font database</code></pre>
+<pre><code>## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database
+
+## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family
+## &#39;Roboto&#39; not found in PostScript font database</code></pre>
+<pre class="r"><code>ragg::agg_png(here::here(&quot;plots&quot;, paste(&quot;mortality&quot;, &quot;.png&quot;)), res = 320, width = 8, height = 6, units = &quot;in&quot;)
+
+final</code></pre>
+<pre><code>## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre><code>## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre><code>## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre><code>## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre><code>## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+## family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre><code>## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead
+
+## Warning in grid.Call.graphics(C_text, as.graphicsAnnot(x$label), x$x, x$y, :
+## font family &#39;Roboto&#39; not found, will use &#39;sans&#39; instead</code></pre>
+<pre class="r"><code>dev.off()</code></pre>
+<pre><code>## png 
+##   2</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/mortality.png" /><!-- --></p>
