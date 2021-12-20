@@ -125,7 +125,7 @@ final <- ggdraw(fundo) +
 
 
 ```{r, warning=FALSE, message=FALSE}
-ragg::agg_png(here::here("plots", paste("mortality", ".png")), res = 320, width = 12, height = 10, units = "in")
+ragg::agg_png(here::here("plots", paste0("mortality",".png")), res = 320, width = 12, height = 10, units = "in")
 
 final
 

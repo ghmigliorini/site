@@ -195,7 +195,7 @@ final &lt;- ggdraw(fundo) +
   draw_text(x = 0.35, y = 0.02, 
             text = &quot;Author: Gustavo H. Migliorini | Data: Global mortality&quot;, 
             family = &quot;techmono&quot;, size = 12, color = &quot;grey30&quot;, hjust = 1)</code></pre>
-<pre class="r"><code>ragg::agg_png(here::here(&quot;plots&quot;, paste(&quot;mortality&quot;, &quot;.png&quot;)), res = 320, width = 12, height = 10, units = &quot;in&quot;)
+<pre class="r"><code>ragg::agg_png(here::here(&quot;plots&quot;, paste0(&quot;mortality&quot;,&quot;.png&quot;)), res = 320, width = 12, height = 10, units = &quot;in&quot;)
 
 final
 
