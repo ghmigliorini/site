@@ -1,0 +1,158 @@
+---
+title: R - Global mortality dataset - Tidytuesday
+author:
+  - admin
+date: '2021-12-18'
+slug: r-global-mortality
+categories: ["Data Science"]
+tags: ["R", "Tidyverse", "Tidytuesday"]
+subtitle: 'Data visualization with the global mortality dataset'
+summary: 'Data visualization with the global mortality dataset'
+authors: []
+lastmod: '2021-12-18T18:18:38-03:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  html_document:
+    keep_md: yes
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<pre class="r"><code>library(tidyverse)
+library(tidytuesdayR)</code></pre>
+<pre class="r"><code>mortality &lt;- readxl::read_xlsx(&quot;C:/Users/Gustavo/Downloads/global_mortality.xlsx&quot;)
+mortality</code></pre>
+<pre><code>## # A tibble: 6,156 x 35
+##    country     country_code  year `Cardiovascular~ `Cancers (%)` `Respiratory di~
+##    &lt;chr&gt;       &lt;chr&gt;        &lt;dbl&gt;            &lt;dbl&gt;         &lt;dbl&gt;            &lt;dbl&gt;
+##  1 Afghanistan AFG           1990             17.6          4.03             2.11
+##  2 Afghanistan AFG           1991             17.8          4.05             2.13
+##  3 Afghanistan AFG           1992             18.4          4.17             2.21
+##  4 Afghanistan AFG           1993             19.0          4.27             2.28
+##  5 Afghanistan AFG           1994             19.1          4.26             2.31
+##  6 Afghanistan AFG           1995             19.9          4.39             2.41
+##  7 Afghanistan AFG           1996             20.4          4.48             2.49
+##  8 Afghanistan AFG           1997             20.4          4.45             2.49
+##  9 Afghanistan AFG           1998             19.6          4.26             2.41
+## 10 Afghanistan AFG           1999             21.1          4.57             2.60
+## # ... with 6,146 more rows, and 29 more variables: Diabetes (%) &lt;dbl&gt;,
+## #   Dementia (%) &lt;dbl&gt;, Lower respiratory infections (%) &lt;dbl&gt;,
+## #   Neonatal deaths (%) &lt;dbl&gt;, Diarrheal diseases (%) &lt;dbl&gt;,
+## #   Road accidents (%) &lt;dbl&gt;, Liver disease (%) &lt;dbl&gt;, Tuberculosis (%) &lt;dbl&gt;,
+## #   Kidney disease (%) &lt;dbl&gt;, Digestive diseases (%) &lt;dbl&gt;, HIV/AIDS (%) &lt;dbl&gt;,
+## #   Suicide (%) &lt;dbl&gt;, Malaria (%) &lt;dbl&gt;, Homicide (%) &lt;dbl&gt;,
+## #   Nutritional deficiencies (%) &lt;dbl&gt;, Meningitis (%) &lt;dbl&gt;, ...</code></pre>
+<pre class="r"><code>summary(mortality)</code></pre>
+<pre><code>##    country          country_code            year     
+##  Length:6156        Length:6156        Min.   :1990  
+##  Class :character   Class :character   1st Qu.:1996  
+##  Mode  :character   Mode  :character   Median :2003  
+##                                        Mean   :2003  
+##                                        3rd Qu.:2010  
+##                                        Max.   :2016  
+##                                                      
+##  Cardiovascular diseases (%)  Cancers (%)      Respiratory diseases (%)
+##  Min.   : 1.429              Min.   : 0.5823   Min.   : 0.298          
+##  1st Qu.:18.744              1st Qu.: 6.9266   1st Qu.: 2.263          
+##  Median :30.652              Median :13.3075   Median : 3.628          
+##  Mean   :29.935              Mean   :14.3865   Mean   : 4.100          
+##  3rd Qu.:38.447              3rd Qu.:21.3591   3rd Qu.: 5.379          
+##  Max.   :67.388              Max.   :33.6175   Max.   :16.289          
+##                                                                        
+##   Diabetes (%)      Dementia (%)      Lower respiratory infections (%)
+##  Min.   : 0.3271   Min.   : 0.04475   Min.   : 0.6846                 
+##  1st Qu.: 3.1983   1st Qu.: 1.01276   1st Qu.: 3.2098                 
+##  Median : 4.9910   Median : 2.52541   Median : 5.1385                 
+##  Mean   : 6.2862   Mean   : 3.22056   Mean   : 5.8392                 
+##  3rd Qu.: 7.9318   3rd Qu.: 4.33010   3rd Qu.: 8.1610                 
+##  Max.   :35.8162   Max.   :16.67248   Max.   :20.0352                 
+##                                                                       
+##  Neonatal deaths (%) Diarrheal diseases (%) Road accidents (%)
+##  Min.   : 0.04071    Min.   : 0.008251      Min.   : 0.2784   
+##  1st Qu.: 0.68559    1st Qu.: 0.178763      1st Qu.: 1.3558   
+##  Median : 3.89183    Median : 0.767651      Median : 1.9287   
+##  Mean   : 4.56666    Mean   : 3.195824      Mean   : 2.5312   
+##  3rd Qu.: 7.74003    3rd Qu.: 5.285289      3rd Qu.: 2.9033   
+##  Max.   :17.80683    Max.   :25.184488      Max.   :20.9009   
+##                                                               
+##  Liver disease (%) Tuberculosis (%)   Kidney disease (%) Digestive diseases (%)
+##  Min.   : 0.1929   Min.   : 0.01088   Min.   :0.05624    Min.   :0.3136        
+##  1st Qu.: 1.3378   1st Qu.: 0.24386   1st Qu.:0.90262    1st Qu.:1.5051        
+##  Median : 1.8255   Median : 0.91365   Median :1.73135    Median :1.9312        
+##  Mean   : 2.1242   Mean   : 2.13261   Mean   :2.08838    Mean   :1.9697        
+##  3rd Qu.: 2.5360   3rd Qu.: 3.32878   3rd Qu.:2.96065    3rd Qu.:2.2885        
+##  Max.   :11.6471   Max.   :16.46586   Max.   :9.94769    Max.   :5.1587        
+##                                                                                
+##   HIV/AIDS (%)       Suicide (%)       Malaria (%)         Homicide (%)    
+##  Min.   : 0.00000   Min.   : 0.1016   Min.   : 0.000000   Min.   : 0.0452  
+##  1st Qu.: 0.08141   1st Qu.: 0.6917   1st Qu.: 0.000000   1st Qu.: 0.2396  
+##  Median : 0.43797   Median : 1.1767   Median : 0.002715   Median : 0.5155  
+##  Mean   : 3.35177   Mean   : 1.3914   Mean   : 1.800705   Mean   : 0.9830  
+##  3rd Qu.: 2.33436   3rd Qu.: 1.7953   3rd Qu.: 0.478271   3rd Qu.: 0.9966  
+##  Max.   :62.19363   Max.   :15.4120   Max.   :24.425962   Max.   :14.2293  
+##                                                                            
+##  Nutritional deficiencies (%) Meningitis (%)    Protein-energy malnutrition (%)
+##  Min.   : 0.00375             Min.   :0.02799   Min.   : 0.00109               
+##  1st Qu.: 0.09012             1st Qu.:0.11099   1st Qu.: 0.05820               
+##  Median : 0.39700             Median :0.35340   Median : 0.31858               
+##  Mean   : 1.09517             Mean   :0.78312   Mean   : 0.99988               
+##  3rd Qu.: 1.34297             3rd Qu.:1.02146   3rd Qu.: 1.21894               
+##  Max.   :35.54501             Max.   :6.98135   Max.   :35.51870               
+##                                                                                
+##   Drowning (%)     Maternal deaths (%) Parkinson disease (%)
+##  Min.   :0.05331   Min.   :0.00188     Min.   :0.002316     
+##  1st Qu.:0.35380   1st Qu.:0.03230     1st Qu.:0.074313     
+##  Median :0.61102   Median :0.23696     Median :0.214174     
+##  Mean   :0.71420   Mean   :0.58591     Mean   :0.290729     
+##  3rd Qu.:0.95709   3rd Qu.:1.00166     3rd Qu.:0.426837     
+##  Max.   :4.51095   Max.   :3.41435     Max.   :1.592211     
+##                                                             
+##  Alcohol disorders (%) Intestinal infectious diseases (%) Drug disorders (%)
+##  Min.   :0.01275       Min.   :0.0000709                  Min.   :0.001797  
+##  1st Qu.:0.07784       1st Qu.:0.0007685                  1st Qu.:0.058298  
+##  Median :0.16038       Median :0.0142907                  Median :0.120883  
+##  Mean   :0.31656       Mean   :0.1765760                  Mean   :0.181023  
+##  3rd Qu.:0.39209       3rd Qu.:0.2650934                  3rd Qu.:0.234596  
+##  Max.   :3.08053       Max.   :2.2765134                  Max.   :1.313466  
+##                                                                             
+##  Hepatitis (%)         Fire (%)       Heat-related (hot and cold exposure) (%)
+##  Min.   :0.004848   Min.   :0.05691   Min.   :0.007108                        
+##  1st Qu.:0.037685   1st Qu.:0.18833   1st Qu.:0.042403                        
+##  Median :0.110875   Median :0.31880   Median :0.069565                        
+##  Mean   :0.161039   Mean   :0.33422   Mean   :0.102844                        
+##  3rd Qu.:0.243074   3rd Qu.:0.43331   3rd Qu.:0.114803                        
+##  Max.   :1.583289   Max.   :1.34369   Max.   :1.165286                        
+##                                                                               
+##  Natural disasters (%)  Conflict (%)     Terrorism (%)   
+##  Min.   : 0.00000      Min.   : 0.0000   Min.   :0.0000  
+##  1st Qu.: 0.00000      1st Qu.: 0.0000   1st Qu.:0.0000  
+##  Median : 0.00000      Median : 0.0000   Median :0.0000  
+##  Mean   : 0.09451      Mean   : 0.2909   Mean   :0.0373  
+##  3rd Qu.: 0.01695      3rd Qu.: 0.0170   3rd Qu.:0.0040  
+##  Max.   :65.29420      Max.   :82.3170   Max.   :5.8770  
+##                        NA&#39;s   :1398      NA&#39;s   :1398</code></pre>
+<pre class="r"><code>mortality &lt;- janitor::clean_names(mortality) |&gt;
+  rename_all(~str_remove(., &#39;_percent&#39;))</code></pre>
+<pre class="r"><code>df_br &lt;- mortality |&gt;
+  filter(country ==&quot;Brazil&quot;) |&gt;
+  select(year, homicide, cancers, cardiovascular_diseases) |&gt;
+  gather(cause, percentage, homicide:cardiovascular_diseases) |&gt;
+  mutate(across(cause, as_factor))
+
+ggplot(df_br, aes(x=year, y=percentage, color=cause, group=cause)) +
+  geom_line() +
+  geom_text(data=filter(df_br, year== max(year)), 
+            aes(label = cause), hjust = 0, nudge_x = 0.1) + 
+  coord_cartesian(clip = &#39;off&#39;) +
+  scale_x_continuous(breaks = c(1990, 1995, 2000, 2005, 2010, 2016)) +
+  scale_y_continuous(breaks = c(5, 10, 15, 20, 25, 30)) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = &quot;#E8E8E8&quot;, color = NA),
+        legend.position = &quot;none&quot;, plot.margin = margin(0.1, 3.7, 0.1, 0.1, &quot;cm&quot;))</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>

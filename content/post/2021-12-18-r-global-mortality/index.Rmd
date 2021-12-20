@@ -1,0 +1,139 @@
+---
+title: R - Global mortality dataset - Tidytuesday
+author:
+  - admin
+date: '2021-12-18'
+slug: r-global-mortality
+categories: ["Data Science"]
+tags: ["R", "Tidyverse", "Tidytuesday"]
+subtitle: 'Data visualization with the global mortality dataset'
+summary: 'Data visualization with the global mortality dataset'
+authors: []
+lastmod: '2021-12-18T18:18:38-03:00'
+featured: no
+image:
+  caption: ''
+  focal_point: ''
+  preview_only: no
+projects: []
+output:
+  html_document:
+    keep_md: yes
+---
+
+```{r echo = FALSE}
+knitr::opts_chunk$set(fig.retina = 2)
+```
+
+```{r, warning=FALSE, message=FALSE}
+library(tidyverse)
+library(tidytuesdayR)
+library(showtext)
+library(cowplot)
+library(ggtext)
+```
+
+
+```{r}
+font_add_google("Roboto", "roboto")
+font_add_google("Oswald", "oswald")
+font_add_google("Heebo", "heebo")
+font_add_google("Share Tech Mono", "techmono")
+showtext_opts(dpi = 320)
+showtext_auto(enable = TRUE)
+```
+
+
+```{r}
+theme_set(theme_void(base_family = "Roboto"))
+theme_update(axis.title.x = element_text(color = "grey30", size = 9, margin = margin(15,0,0,0)),
+             axis.text.x = element_text(color = "grey30", size = 9, margin = margin(10,0,0,0)),
+             axis.ticks.x = element_line(),
+             axis.title.y = element_blank(),
+             axis.text.y = element_text(color = "grey30", size = 9, hjust = 1),
+             axis.ticks.y = element_line()
+             )
+```
+
+
+```{r}
+mortality <- readxl::read_xlsx("C:/Users/Gustavo/Downloads/global_mortality.xlsx")
+mortality
+```
+
+```{r}
+summary(mortality)
+```
+
+```{r}
+mortality <- janitor::clean_names(mortality) |>
+  rename_all(~str_remove(., '_percent'))
+```
+
+
+```{r}
+df_br <- mortality |> 
+  filter(country =="Brazil") |>
+  select(-conflict & -terrorism) |>
+  gather(cause, percentage, cardiovascular_diseases:natural_disasters) |>
+  group_by(cause) |>
+  filter(year == 1990 | year == max(year)) |>
+  ungroup() |>
+  mutate(cause = fct_relevel(cause, unique(cause)), year = paste0("year_", year)) |>
+  pivot_wider(id_cols = "cause", names_from = "year", values_from = "percentage") |>
+  mutate(label_cod = as.numeric(as.factor(cause))) |>
+  mutate(cause = str_replace_all(cause, "_", " ")) |>
+  mutate(cause = str_to_title(cause))
+  
+```
+
+```{r, warnings=FALSE}
+label_y <- df_br$label_cod
+labels_cause <- df_br$cause
+
+plot_br <- df_br |>
+  ggplot() +
+  geom_point(aes(x=year_2016, y=label_cod), size = 3, color="#006d2c") +
+  geom_segment(aes(x = year_2016, xend=year_1990, y=label_cod, yend=label_cod), size = 1.5, color="#006d2c", alpha = 0.5) +
+  scale_y_continuous(breaks = label_y, labels = labels_cause) +
+  scale_x_continuous(labels=scales::percent_format(accuracy = 1, scale = 1)) +
+  labs(x = "Percentage change") +
+  guides(color = "none") +
+  theme(panel.grid.major.x = element_line(linetype = "14", size = 0.3, color = "grey20"))
+  
+```
+
+
+```{r, warnings=FALSE, message=FALSE}
+fundo <- ggplot() +
+  scale_x_continuous(limits = c(0,80), expand = c(0,0))+
+  scale_y_continuous(limits = c(0,60), expand = c(0,0))+
+  coord_fixed() +
+  labs(title = "Mortality in Brazil", subtitle = "Change in the percentage of deaths from 1990 to 2016") +
+  theme_void() +
+  theme(plot.background = element_rect(fill = "#E8E8E8", color = NA),
+        plot.title = element_text(family = "oswald", color = "#737373", face = "bold", size = 20),
+        plot.subtitle = element_textbox(family ="roboto", color = "#737373", size = 14))
+
+final <- ggdraw(fundo) + 
+  draw_plot(plot_br, width = 0.75, height = 0.85, y = 0.05, x = 0.15) +
+  draw_text(x = 0.45, y = 0.01, 
+            text = "Author: Gustavo H. Migliorini | Data: Global mortality", 
+            family = "techmono", size = 8, color = "grey30", hjust = 1)
+
+```
+
+
+```{r}
+ragg::agg_png(here::here("plots", paste("mortality", ".png")), res = 320, width = 8, height = 6, units = "in")
+
+final
+
+dev.off()
+```
+
+![](index_files/figure-html/mortality.png)<!-- -->
+
+
+
+
