@@ -27,11 +27,14 @@ import matplotlib.pyplot as plt
 
 ```python
 # get data and load as dataframe 
-white_wine = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv"
-red_wine = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
+# white_wine = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv"
+# red_wine = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
 
-df_white = pd.read_csv(white_wine, sep=";")
-df_red = pd.read_csv(red_wine, sep=";")
+# df_white = pd.read_csv(white_wine, sep=";")
+# df_red = pd.read_csv(red_wine, sep=";")
+
+df_white = pd.read_csv("C:/Users/Gustavo/OneDrive/Data_Science/wine_quality/winequality-white.csv", sep=";")
+df_red = pd.read_csv("C:/Users/Gustavo/OneDrive/Data_Science/wine_quality/winequality-red.csv")
 ```
 
 
@@ -907,6 +910,36 @@ The dataset have two columns with labels (quality and type) which will be used t
 
 
 ```python
+df_wine_full.dtypes
+```
+
+
+
+
+    fixed_acidity           float64
+    volatile_acidity        float64
+    citric_acid             float64
+    residual_sugar          float64
+    chlorides               float64
+    free_sulfur_dioxide     float64
+    total_sulfur_dioxide    float64
+    density                 float64
+    pH                      float64
+    sulphates               float64
+    alcohol                 float64
+    quality                   int64
+    type                     object
+    dtype: object
+
+
+
+
+```python
+df_wine_full['quality'] = df_wine_full['quality'].astype(object)
+```
+
+
+```python
 # plot quality levels
 f, axes = plt.subplots(1, 2, figsize = (10, 5))
 sns.countplot(data = df_wine_full, x = 'quality', ax = axes[0])
@@ -922,8 +955,207 @@ sns.countplot(data = df_wine_full, x = 'type', ax = axes[1], palette=['#67001f',
 
 
     
-![png](./index_16_1.png)
+![png](./index_18_1.png)
     
 
+
+
+```python
+# check correlations between variables
+corr_wine = df_wine_full.corr()
+plt.figure(figsize=(15,12))
+sns.heatmap(corr_wine, annot=True, cmap=plt.cm.Reds)
+```
+
+
+
+
+    <AxesSubplot:>
+
+
+
+
+    
+![png](./index_19_1.png)
+    
+
+
+
+```python
+# visualize the relationship between each attribute and wine type
+
+f, axes = plt.subplots(3, 4, figsize = (20, 15))
+
+# fixed acidity
+sns.boxplot(x = 'type', y = 'fixed_acidity', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 0])
+sns.stripplot(x = 'type', y = 'fixed_acidity', color='black', alpha=0.2, data = df_wine_full, ax=axes[0, 0])
+axes[0, 0].set_title("Fixed acidity", fontsize = 18)
+axes[0, 0].set_ylabel("Fixed acidity")
+axes[0, 0].set_xlabel("")
+
+# volatile acidity
+sns.boxplot(x = 'type', y = 'volatile_acidity', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 1])
+sns.stripplot(x = 'type', y = 'volatile_acidity', color='black', alpha=0.2, data = df_wine_full, ax=axes[0, 1])
+axes[0, 1].set_title("Volatile acidity", fontsize = 18)
+axes[0, 1].set_ylabel("Volatile acidity")
+axes[0, 1].set_xlabel("")
+
+# citric acid
+sns.boxplot(x = 'type', y = 'citric_acid', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 2])
+sns.stripplot(x = 'type', y = 'citric_acid', color='black', alpha=0.2, data = df_wine_full, ax=axes[0, 2])
+axes[0, 2].set_title("Citric acid", fontsize = 18)
+axes[0, 2].set_ylabel("Citric acid")
+axes[0, 2].set_xlabel("")
+
+# residual sugar
+sns.boxplot(x = 'type', y = 'residual_sugar', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 3])
+sns.stripplot(x = 'type', y = 'residual_sugar', color='black', alpha=0.2, data = df_wine_full, ax=axes[0, 3])
+axes[0, 3].set_title("Residual Sugar", fontsize = 18)
+axes[0, 3].set_ylabel("Residual Sugar")
+axes[0, 3].set_xlabel("")
+
+# chlorides
+sns.boxplot(x = 'type', y = 'chlorides', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 0])
+sns.stripplot(x = 'type', y = 'chlorides', color='black', alpha=0.2, data = df_wine_full, ax=axes[1, 0])
+axes[1, 0].set_title("Chlorides", fontsize = 18)
+axes[1, 0].set_ylabel("Chlorides")
+axes[1, 0].set_xlabel("")
+
+# free sulfur dioxide
+sns.boxplot(x = 'type', y = 'free_sulfur_dioxide', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 1])
+sns.stripplot(x = 'type', y = 'free_sulfur_dioxide', color='black', alpha=0.2, data = df_wine_full, ax=axes[1, 1])
+axes[1, 1].set_title("Free sulfur dioxide", fontsize = 18)
+axes[1, 1].set_ylabel("Free sulfur dioxide")
+axes[1, 1].set_xlabel("")
+
+# total sulfur dioxide 
+sns.boxplot(x = 'type', y = 'total_sulfur_dioxide', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 2])
+sns.stripplot(x = 'type', y = 'total_sulfur_dioxide', color='black', alpha=0.2, data = df_wine_full, ax=axes[1, 2])
+axes[1, 2].set_title("Total sulfur dioxide", fontsize = 18)
+axes[1, 2].set_ylabel("Total sulfur dioxide")
+axes[1, 2].set_xlabel("")
+
+# density 
+sns.boxplot(x = 'type', y = 'density', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 3])
+sns.stripplot(x = 'type', y = 'density', color='black', alpha=0.2, data = df_wine_full, ax=axes[1, 3])
+axes[1, 3].set_title("Density", fontsize = 18)
+axes[1, 3].set_ylabel("Density")
+axes[1, 3].set_xlabel("")
+
+# ph 
+sns.boxplot(x = 'type', y = 'pH', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 0])
+sns.stripplot(x = 'type', y = 'pH', color='black', alpha=0.2, data = df_wine_full, ax=axes[2, 0])
+axes[2, 0].set_title("pH", fontsize = 18)
+axes[2, 0].set_ylabel("pH")
+axes[2, 0].set_xlabel("")
+
+# sulphates 
+sns.boxplot(x = 'type', y = 'sulphates', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 1])
+sns.stripplot(x = 'type', y = 'sulphates', color='black', alpha=0.2, data = df_wine_full, ax=axes[2, 1])
+axes[2, 1].set_title("Sulphates", fontsize = 18)
+axes[2, 1].set_ylabel("Sulphates")
+axes[2, 1].set_xlabel("")
+
+# alcohol 
+sns.boxplot(x = 'type', y = 'alcohol', palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 2])
+sns.stripplot(x = 'type', y = 'alcohol', color='black', alpha=0.2, data = df_wine_full, ax=axes[2, 2])
+axes[2, 2].set_title("Alcohol", fontsize = 18)
+axes[2, 2].set_ylabel("Alcohol")
+axes[2, 2].set_xlabel("")
+
+f.delaxes(axes[2,3])
+```
+
+
+    
+![png](./index_20_0.png)
+    
+
+
+There are some clearly differences between red and white types for some of the wine charachteristics (e.g., volatile acidity and total sulfur dioxide).
+
+
+```python
+# visualize the relationship between each attribute and the quality index
+
+f, axes = plt.subplots(3, 4, figsize = (20, 15))
+
+# fixed acidity
+sns.boxplot(x = 'quality', y = 'fixed_acidity', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 0])
+axes[0, 0].set_title("Fixed acidity", fontsize = 18)
+axes[0, 0].set_ylabel("Fixed acidity")
+axes[0, 0].set_xlabel("")
+
+# volatile acidity
+sns.boxplot(x = 'quality', y = 'volatile_acidity', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 1])
+axes[0, 1].set_title("Volatile acidity", fontsize = 18)
+axes[0, 1].set_ylabel("Volatile acidity")
+axes[0, 1].set_xlabel("")
+
+# citric acid
+sns.boxplot(x = 'quality', y = 'citric_acid', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 2])
+axes[0, 2].set_title("Citric acid", fontsize = 18)
+axes[0, 2].set_ylabel("Citric acid")
+axes[0, 2].set_xlabel("")
+
+# residual sugar
+sns.boxplot(x = 'quality', y = 'residual_sugar', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[0, 3])
+axes[0, 3].set_title("Residual Sugar", fontsize = 18)
+axes[0, 3].set_ylabel("Residual Sugar")
+axes[0, 3].set_xlabel("")
+
+# chlorides
+sns.boxplot(x = 'quality', y = 'chlorides', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 0])
+axes[1, 0].set_title("Chlorides", fontsize = 18)
+axes[1, 0].set_ylabel("Chlorides")
+axes[1, 0].set_xlabel("")
+
+# free sulfur dioxide
+sns.boxplot(x = 'quality', y = 'free_sulfur_dioxide', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 1])
+axes[1, 1].set_title("Free sulfur dioxide", fontsize = 18)
+axes[1, 1].set_ylabel("Free sulfur dioxide")
+axes[1, 1].set_xlabel("")
+
+# total sulfur dioxide 
+sns.boxplot(x = 'quality', y = 'total_sulfur_dioxide', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 2])
+axes[1, 2].set_title("Total sulfur dioxide", fontsize = 18)
+axes[1, 2].set_ylabel("Total sulfur dioxide")
+axes[1, 2].set_xlabel("")
+
+# density 
+sns.boxplot(x = 'quality', y = 'density', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[1, 3])
+axes[1, 3].set_title("Density", fontsize = 18)
+axes[1, 3].set_ylabel("Density")
+axes[1, 3].set_xlabel("")
+
+# ph 
+sns.boxplot(x = 'quality', y = 'pH', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 0])
+axes[2, 0].set_title("pH", fontsize = 18)
+axes[2, 0].set_ylabel("pH")
+axes[2, 0].set_xlabel("")
+
+# sulphates 
+sns.boxplot(x = 'quality', y = 'sulphates', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 1])
+axes[2, 1].set_title("Sulphates", fontsize = 18)
+axes[2, 1].set_ylabel("Sulphates")
+axes[2, 1].set_xlabel("")
+
+# alcohol 
+sns.boxplot(x = 'quality', y = 'alcohol', hue="type", palette=['#67001f',"#d9f0a3"], data = df_wine_full, ax=axes[2, 2])
+axes[2, 2].set_title("Alcohol", fontsize = 18)
+axes[2, 2].set_ylabel("Alcohol")
+axes[2, 2].set_xlabel("")
+
+f.delaxes(axes[2,3])
+```
+
+
+    
+![png](./index_22_0.png)
+    
+
+
+- We can observe that as the alcohol content increases the quality index also increases.
+- For red wines, the volatile acidity may be a good predictor of quality. Higher quality wines have lower volatile acidity values.
 
 To be continued...
