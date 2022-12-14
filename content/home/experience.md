@@ -22,13 +22,27 @@ date_format: Jan 2006
 #   Leave `date_end` empty if it's your current employer.
 #   Begin multi-line descriptions with YAML's `|2-` multi-line prefix.
 experience:
+  - title: Data analyst
+    company: ALS life sciences
+    company_url: ''
+    company_logo:
+    location: Remote
+    date_start: '2022-02-07'
+    date_end: ''
+    description: |2-
+        Responsibilities include:
+        
+        * Analyses of clinical research data (Excel)
+        * Validation of data quality
+        * Review of statistical reports
+
   - title: Research data analyst
     company: Federal University of Pernambuco - UFRPE
     company_url: ''
     company_logo:
     location: Recife
     date_start: '2021-05-01'
-    date_end: ''
+    date_end: '2021-12-01'
     description: |2-
         Responsibilities include:
         
