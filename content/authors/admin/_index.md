@@ -44,6 +44,6 @@ superuser: true
 title: Gustavo H. Migliorini
 ---
 
-Hello! Welcome to my website. Here you will find lots of stuff I've been doing as data scientist and ecologist. I'm strongly interested in data science and everything we can do with data. Currently, I'm doing a post-degree course in data science and looking for a position as data scientist/analyst.    
+Hello! Welcome to my website. Here you will find a little about my career as a data scientist and ecologist. Currently, I'm focused on building my data science skills and learning more about everything that can be done with data.   
 
-{{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/Gustavo.pdf" "newtab" >}}CV{{< /staticref >}}.
+{{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/Gustavo_CV_2023.pdf" "newtab" >}}CV{{< /staticref >}}.

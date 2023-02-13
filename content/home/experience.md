@@ -28,7 +28,7 @@ experience:
     company_logo:
     location: Remote
     date_start: '2022-02-07'
-    date_end: ''
+    date_end: '2022-10-12'
     description: |2-
         Responsibilities include:
         
