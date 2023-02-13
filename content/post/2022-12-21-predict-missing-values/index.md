@@ -13,5 +13,6 @@ draft: false
 image:
   caption:
   focal_point: ""
+link: https://github.com/ghmigliorini/site/blob/main/content/post/2022-12-21-predict-missing-values/index.ipynb
 ---
 
