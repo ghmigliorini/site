@@ -1,5 +1,5 @@
 ---
-title: Python - Predicting missing values
+title: {{< staticref "/content/post/2022-12-21-predict-missing-values/index.ipynb" "newtab" >}}Python - Predicting missing values{{< /staticref >}}
 subtitle: Using machine learning algorithms to predict missing values
 summary: Using machine learning algorithms to predict missing values
 authors:
@@ -14,7 +14,6 @@ image:
   caption:
   focal_point: ""
 ---
-
 
 ```python
 # libraries

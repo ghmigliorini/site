@@ -46,4 +46,4 @@ title: Gustavo H. Migliorini
 
 Hello! Welcome to my website. Here you will find a little about my career as a data scientist and ecologist. Currently, I'm focused on building my data science skills and learning more about everything that can be done with data.   
 
-{{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/Gustavo_CV_2023.pdf" "newtab" >}}CV{{< /staticref >}}.
+{{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/Gustavo_CV_2023_English.pdf" "newtab" >}}CV{{< /staticref >}}.
