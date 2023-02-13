@@ -26,7 +26,7 @@ experience:
     company: ALS life sciences
     company_url: ''
     company_logo:
-    location: Remote
+    location:
     date_start: '2022-02-07'
     date_end: '2022-10-12'
     description: |2-
@@ -40,7 +40,7 @@ experience:
     company: Federal University of Pernambuco - UFRPE
     company_url: ''
     company_logo:
-    location: Recife
+    location:
     date_start: '2021-05-01'
     date_end: '2021-12-01'
     description: |2-
