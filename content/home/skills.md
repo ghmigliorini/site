@@ -20,7 +20,7 @@ feature:
   icon: r-project
   icon_pack: fab
   name: R
-- description: '2 year of experience, using for data manipulation and visualization with pandas, numpy, matplotlib, seaborn, etc, and, machine learning with scikit-learn'
+- description: '2 years of experience, using for data manipulation and visualization with pandas, numpy, matplotlib, seaborn, etc, and, machine learning with scikit-learn'
   icon: python
   icon_pack: fab
   name: Python
@@ -28,7 +28,7 @@ feature:
   icon: chart-line
   icon_pack: fas
   name: Statistics
-- description: '2 year of experience using PostgreSQL'
+- description: '2 years of experience using PostgreSQL'
   icon: database
   icon_pack: fas
   name: SQL
