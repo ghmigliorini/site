@@ -28,7 +28,7 @@ experience:
     company_logo:
     location:
     date_start: '2022-02-07'
-    date_end: '2022-10-12'
+    date_end: '2022-12-10'
     description: |2-
         Responsibilities include:
         

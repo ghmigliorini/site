@@ -4,7 +4,7 @@ author:
   - admin
 date: '2021-12-16'
 slug: teste-rmarkdown
-categories: ["Data Science"]
+categories:
 tags: ["R", "Tidyverse"]
 subtitle: 'Testing a post with R markdown'
 summary: 'Testing a post with R markdown'
