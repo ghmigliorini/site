@@ -1,5 +1,5 @@
 ---
-title: Python - Predicting missing values
+title: [Python - Predicting missing values](https://github.com/ghmigliorini/site/blob/main/content/post/2022-12-21-predict-missing-values/index.ipynb)
 subtitle: Using machine learning algorithms to predict missing values
 summary: Using machine learning algorithms to predict missing values
 authors:
@@ -14,6 +14,5 @@ image:
   caption:
   focal_point: ""
 link: https://github.com/ghmigliorini/site/blob/main/content/post/2022-12-21-predict-missing-values/index.ipynb
-label: Python - Predicting missing values
 ---
 
