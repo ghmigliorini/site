@@ -33,7 +33,7 @@ feature:
   icon_pack: fas
   name: SQL
 - description: '1 year of experience using Power BI'
-  icon: chart-simple
+  icon: chart-bar
   icon_pack: far
   name: Dashboards
 
