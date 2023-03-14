@@ -34,7 +34,7 @@ feature:
   name: SQL
 - description: '1 year of experience using Power BI'
   icon: chart-bar
-  icon_pack: far
+  icon_pack: fas
   name: Dashboards
 
 # Uncomment to use emoji icons.
