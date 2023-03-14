@@ -33,8 +33,8 @@ feature:
   icon_pack: fas
   name: SQL
 - description: '1 year of experience using Power BI'
-  icon: chart-line
-  icon_pack: fas
+  icon: chart-simple
+  icon_pack: fa-solid
   name: Dashboards
 
 # Uncomment to use emoji icons.
