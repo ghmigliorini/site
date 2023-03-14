@@ -5,10 +5,10 @@ education:
   - course: Post-degree in Data Science
     institution: Federal Technological University of Paraná - UTFPR
     year: 2022
-  - course: PhD in Animal Biology (Ecology)
+  - course: PhD in Environmental Sciences
     institution: State University of São Paulo - UNESP
     year: 2018
-  - course: Msc in Animal Biology (Ecology)
+  - course: Msc in Environmental Sciences
     institution: State University of São Paulo - UNESP
     year: 2014
   - course: BSc in Biological Sciences
@@ -44,6 +44,6 @@ superuser: true
 title: Gustavo H. Migliorini
 ---
 
-Hello! Welcome to my website. Here you will find a little about my career as a data scientist and ecologist. Currently, I'm focused on building my data science skills and learning more about everything that can be done with data.   
+Hello! Welcome to my website. Here you will find a little about my career as a data scientist and researcher. Currently, I'm focused on building my data science skills and learning more about everything that can be done with data.   
 
 {{< icon name="download" pack="fas" >}} Download my {{< staticref "uploads/Gustavo_CV_2023_English.pdf" "newtab" >}}CV{{< /staticref >}}.
