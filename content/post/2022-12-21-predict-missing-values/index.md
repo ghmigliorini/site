@@ -1,6 +1,6 @@
 ---
 date: "2023-02-13T00:00:00Z"  # date determines ordering on front page
-external_link: "https://github.com/ghmigliorini/site/blob/main/content/post/2022-12-21-predict-missing-values/index.ipynb"
+external_link: "https://github.com/ghmigliorini/projects/blob/main/missing-values/missing-values.ipynb"
 image:
   caption: ""
   focal_point: Smart
