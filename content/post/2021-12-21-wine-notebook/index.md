@@ -1,6 +1,6 @@
 ---
 date: "2021-12-21T00:00:00Z"  # date determines ordering on front page
-external_link: "https://github.com/ghmigliorini/site/blob/main/content/post/2021-12-21-wine-notebook/index.ipynb"
+external_link: "https://github.com/ghmigliorini/projects/blob/main/wine-data/wine.ipynb"
 image:
   caption: ""
   focal_point: Smart
