@@ -1,13 +1,13 @@
 ---
-title: Analysis of Palmer penguins dataset in R
+title: R - Analysis of Palmer penguins dataset
 author:
   - admin
 date: '2021-12-16'
 slug: teste-rmarkdown
 categories:
 tags: ["R", "Tidyverse"]
-subtitle: 'Testing a post with R markdown'
-summary: 'Testing a post with R markdown'
+subtitle: ''
+summary: ''
 authors: []
 lastmod: '2021-12-16T16:07:37-03:00'
 featured: no
