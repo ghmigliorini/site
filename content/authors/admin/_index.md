@@ -21,6 +21,7 @@ interests:
 - Statistics
 - Machine Learning
 - Deep Learning
+- Data Visualization
 role: Data Scientist|PhD
 social:
 - icon: envelope
