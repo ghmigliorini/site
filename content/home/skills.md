@@ -24,7 +24,7 @@ feature:
   icon: python
   icon_pack: fab
   name: Python
-- description: '9 years of experience, using for several univariate and multivariate analyses'
+- description: '9 years of experience'
   icon: chart-line
   icon_pack: fas
   name: Statistics
