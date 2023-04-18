@@ -16,11 +16,11 @@ subtitle:
 # - Add/remove as many `feature` blocks below as you like.
 # - For available icons, see: https://wowchemy.com/docs/page-builder/#icons
 feature:
-- description: '9 years of experience - using for statistical analysis, data manipulation and visualization'
+- description: '9 years of experience, using for statistical analysis, data manipulation and visualization'
   icon: r-project
   icon_pack: fab
   name: R
-- description: '2 years of experience - using for data analysis, manipulation and visualization with pandas, numpy, matplotlib, seaborn, etc, and, machine learning with scikit-learn'
+- description: '2 years of experience, using for data analysis, manipulation and visualization with pandas, numpy, matplotlib, seaborn, etc, and, machine learning with scikit-learn'
   icon: python
   icon_pack: fab
   name: Python
