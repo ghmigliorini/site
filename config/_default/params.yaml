@@ -5,9 +5,9 @@
 
 # Appearance
 
-theme: forest
+theme: 'default'
 day_night: true
-font: ''
+font: 'default'
 font_size: L
 
 # SEO
@@ -55,7 +55,7 @@ twitter: ''
 
 main_menu:
   enable: true
-  align: r
+  align: l
   show_logo: false
   show_language: false
   show_day_night: true
@@ -93,7 +93,7 @@ show_related:
   project: true
   publication: true
   event: true
-reading_time: true
+reading_time: false
 section_pager: false
 docs_section_pager: true
 sharing: true

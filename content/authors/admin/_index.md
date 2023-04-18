@@ -17,10 +17,11 @@ education:
 email: ""
 highlight_name: false
 interests:
-- Data Science
+- Data Analysis
 - Statistics
 - Machine Learning
 - Deep Learning
+- Data Visualization
 role: Data Scientist|PhD
 social:
 - icon: envelope
